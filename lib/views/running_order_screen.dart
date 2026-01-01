@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/utils/tab_config.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/order_viewmodel.dart';
 import 'package:pda_handheld/models/models.dart';
-import 'package:pda_handheld/views/request_order_screen.dart';
-import 'package:pda_handheld/views/demand_order_screen.dart';
-import 'package:pda_handheld/views/robot_screen.dart';
 
 class RunningOrderScreen extends StatefulWidget {
   const RunningOrderScreen({super.key});
@@ -14,12 +13,21 @@ class RunningOrderScreen extends StatefulWidget {
 }
 
 class _RunningOrderScreenState extends State<RunningOrderScreen> {
-  int _selectedIndex = 2;
-
   @override
   void initState() {
     super.initState();
     Future.microtask(() => _loadRunningOrders());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BottomNavViewModel>().addListener(_onTabChanged);
+    });
+  }
+
+  void _onTabChanged() {
+    final navVM = context.read<BottomNavViewModel>();
+
+    if (navVM.index == Tabs.running && navVM.previousIndex != Tabs.running) {
+      _loadRunningOrders();
+    }
   }
 
   Future<void> _loadRunningOrders() async {
@@ -87,76 +95,6 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
           backgroundColor: success ? Colors.green : Colors.red,
         ),
       );
-    }
-  }
-
-  Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.assignment, 'label': 'Order'},
-      {'icon': Icons.inbox, 'label': 'Demand'},
-      {'icon': Icons.play_circle, 'label': 'Running'},
-      {'icon': Icons.smart_toy, 'label': 'Robot'},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(items.length, (index) {
-          return InkWell(
-            onTap: () => _navigateToScreen(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: _selectedIndex == index
-                    ? Theme.of(context).primaryColor
-                    : Colors.transparent,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    items[index]['icon'] as IconData,
-                    color: _selectedIndex == index ? Colors.white : Colors.grey,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items[index]['label'] as String,
-                    style: TextStyle(
-                      color: _selectedIndex == index
-                          ? Colors.white
-                          : Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  void _navigateToScreen(int index) {
-    late Widget screen;
-    switch (index) {
-      case 0:
-        screen = const RequestOrderScreen();
-        break;
-      case 1:
-        screen = const DemandOrderScreen();
-        break;
-      case 2:
-        return;
-      case 3:
-        screen = const RobotScreen();
-        break;
-    }
-
-    if (screen != null) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => screen));
     }
   }
 
@@ -229,12 +167,6 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
             ),
           );
         },
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: _buildBottomNav(),
       ),
     );
   }

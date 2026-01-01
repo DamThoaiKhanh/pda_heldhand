@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/utils/tab_config.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
+import 'package:pda_handheld/views/notification_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/order_viewmodel.dart';
 import 'package:pda_handheld/models/models.dart';
-import 'package:pda_handheld/views/request_order_screen.dart';
-import 'package:pda_handheld/views/running_order_screen.dart';
-import 'package:pda_handheld/views/robot_screen.dart';
 import 'package:intl/intl.dart';
 
 class DemandOrderScreen extends StatefulWidget {
@@ -15,18 +15,42 @@ class DemandOrderScreen extends StatefulWidget {
 }
 
 class _DemandOrderScreenState extends State<DemandOrderScreen> {
-  int _selectedIndex = 1;
+  late BottomNavViewModel _bottomNavViewModel;
   String? _selectedOrderId;
 
   @override
   void initState() {
     super.initState();
+
     Future.microtask(() => _loadDemandOrders());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BottomNavViewModel>().addListener(_onTabChanged);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _bottomNavViewModel = context.read<BottomNavViewModel>();
+  }
+
+  @override
+  void dispose() {
+    _bottomNavViewModel.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
+  void _onTabChanged() {
+    final navVM = context.read<BottomNavViewModel>();
+
+    if (navVM.index == Tabs.demand && navVM.previousIndex != Tabs.demand) {
+      _loadDemandOrders();
+    }
   }
 
   Future<void> _loadDemandOrders() async {
-    final orderViewModel = context.read<OrderViewModel>();
-    await orderViewModel.fetchDemandOrders();
+    await context.read<OrderViewModel>().fetchDemandOrders();
   }
 
   void _showMenu(DemandOrder order) {
@@ -88,81 +112,38 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
     }
   }
 
-  Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.assignment, 'label': 'Order'},
-      {'icon': Icons.inbox, 'label': 'Demand'},
-      {'icon': Icons.play_circle, 'label': 'Running'},
-      {'icon': Icons.smart_toy, 'label': 'Robot'},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(items.length, (index) {
-          return InkWell(
-            onTap: () => _navigateToScreen(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: _selectedIndex == index
-                    ? Theme.of(context).primaryColor
-                    : Colors.transparent,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    items[index]['icon'] as IconData,
-                    color: _selectedIndex == index ? Colors.white : Colors.grey,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items[index]['label'] as String,
-                    style: TextStyle(
-                      color: _selectedIndex == index
-                          ? Colors.white
-                          : Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  void _navigateToScreen(int index) {
-    late Widget screen;
-
-    switch (index) {
-      case 0:
-        screen = const RequestOrderScreen();
-        break;
-      case 1:
-        return; // no navigation
-      case 2:
-        screen = const RunningOrderScreen();
-        break;
-      case 3:
-        screen = const RobotScreen();
-        break;
-      default:
-        return;
-    }
-
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => screen));
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(7);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Demand order')),
+      appBar: AppBar(
+        title: const Text('Demand Order'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationScreen()),
+              );
+            },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
+            onSelected: (value) {
+              if (value == 'settings') {
+                openSettingsTab(context);
+              }
+            },
+          ),
+        ],
+      ),
       body: Consumer<OrderViewModel>(
         builder: (context, orderViewModel, child) {
           if (orderViewModel.isLoading) {
@@ -224,12 +205,6 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
             ),
           );
         },
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: _buildBottomNav(),
       ),
     );
   }

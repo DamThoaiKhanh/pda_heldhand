@@ -18,92 +18,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _vibrationEnabled = false;
   String _selectedTheme = 'System';
 
-  Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.smart_toy, 'label': 'Robot'},
-      {'icon': Icons.history, 'label': 'Record'},
-      {'icon': Icons.map, 'label': 'Map'},
-      {'icon': Icons.settings, 'label': 'Settings'},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(items.length, (index) {
-          return InkWell(
-            onTap: () => _navigateToScreen(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: _selectedIndex == index + 4
-                    ? Theme.of(context).primaryColor
-                    : Colors.transparent,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    items[index]['icon'] as IconData,
-                    color: _selectedIndex == index + 4
-                        ? Colors.white
-                        : Colors.grey,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items[index]['label'] as String,
-                    style: TextStyle(
-                      color: _selectedIndex == index + 4
-                          ? Colors.white
-                          : Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  void _navigateToScreen(int index) {
-    late Widget screen;
-    switch (index) {
-      case 0:
-        screen = const RobotScreen();
-        break;
-      case 1:
-        screen = const RecordScreen();
-        break;
-      case 2:
-        screen = const MapScreen();
-        break;
-      case 3:
-        return;
-    }
-
-    if (screen != null) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => screen));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const RequestOrderScreen()),
-            );
-          },
-        ),
-      ),
+      appBar: AppBar(title: const Text('Settings'), leading: null),
       body: ListView(
         children: [
           const Padding(
@@ -300,12 +218,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
         ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: _buildBottomNav(),
       ),
     );
   }

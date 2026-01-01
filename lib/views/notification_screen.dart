@@ -246,6 +246,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           }
 
           return FloatingActionButton.extended(
+            heroTag: "NotificationClearAllFAB",
             onPressed: () {
               showDialog(
                 context: context,

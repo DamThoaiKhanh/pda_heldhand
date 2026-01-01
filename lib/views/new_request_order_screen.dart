@@ -99,7 +99,7 @@ class _NewRequestOrderScreenState extends State<NewRequestOrderScreen> {
         final noti = context.read<NotificationViewModel>();
         noti.addNotification(
           AppNotification(
-            id: '1',
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
             title: 'New Request Order',
             message: 'A new request order has been created.',
             type: NotificationType.info,

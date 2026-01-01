@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/auth_viewmodel.dart';
 import 'package:pda_handheld/viewmodels/order_viewmodel.dart';
@@ -22,7 +23,6 @@ class RequestOrderScreen extends StatefulWidget {
 }
 
 class _RequestOrderScreenState extends State<RequestOrderScreen> {
-  int _selectedIndex = 0;
   String? _selectedOrderId;
 
   @override
@@ -119,93 +119,16 @@ class _RequestOrderScreenState extends State<RequestOrderScreen> {
     }
   }
 
-  Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.assignment, 'label': 'Order'},
-      {'icon': Icons.inbox, 'label': 'Demand'},
-      {'icon': Icons.play_circle, 'label': 'Running'},
-      {'icon': Icons.smart_toy, 'label': 'Robot'},
-      {'icon': Icons.history, 'label': 'Record'},
-      {'icon': Icons.map, 'label': 'Map'},
-      {'icon': Icons.person, 'label': 'Profile'},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(items.length, (index) {
-          return InkWell(
-            onTap: () => _navigateToScreen(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: _selectedIndex == index
-                    ? Theme.of(context).primaryColor
-                    : Colors.transparent,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    items[index]['icon'] as IconData,
-                    color: _selectedIndex == index ? Colors.white : Colors.grey,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items[index]['label'] as String,
-                    style: TextStyle(
-                      color: _selectedIndex == index
-                          ? Colors.white
-                          : Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  void _navigateToScreen(int index) {
-    Widget screen;
-    switch (index) {
-      case 0:
-        return;
-      case 1:
-        screen = const DemandOrderScreen();
-        break;
-      case 2:
-        screen = const RunningOrderScreen();
-        break;
-      case 3:
-        screen = const RobotScreen();
-        break;
-      case 4:
-        screen = const RecordScreen();
-        break;
-      case 5:
-        screen = const MapScreen();
-        break;
-      case 6:
-        screen = const ProfileScreen();
-        break;
-      default:
-        return;
-    }
-
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => screen));
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(7);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request order'),
+        title: const Text('Request Order'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -222,9 +145,7 @@ class _RequestOrderScreenState extends State<RequestOrderScreen> {
             ],
             onSelected: (value) {
               if (value == 'settings') {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
+                openSettingsTab(context);
               }
             },
           ),
@@ -288,13 +209,8 @@ class _RequestOrderScreenState extends State<RequestOrderScreen> {
           );
         },
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: _buildBottomNav(),
-      ),
       floatingActionButton: FloatingActionButton(
+        heroTag: "request_order_fab",
         onPressed: () {
           Navigator.of(context)
               .push(

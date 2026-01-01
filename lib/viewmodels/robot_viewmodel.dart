@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:pda_handheld/models/models.dart';
 import 'package:pda_handheld/services/api_service.dart';
+import 'package:pda_handheld/services/storage_service.dart';
 
 class RobotViewModel extends ChangeNotifier {
   final ApiService _apiService;
-
-  RobotViewModel(this._apiService);
+  final StorageService _storageService = StorageService();
 
   List<Robot> _robots = [];
   Robot? _selectedRobot;
@@ -20,6 +20,20 @@ class RobotViewModel extends ChangeNotifier {
   Record? get selectedRecord => _selectedRecord;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  RobotViewModel(this._apiService) {
+    init();
+  }
+
+  Future<void> init() async {
+    _apiService.setBaseUrl(
+      _storageService.getServerConfig()?.baseUrl ?? "http://10.0.2.2:8088",
+    );
+    final user = _storageService.getUser();
+    if (user != null) {
+      _apiService.setToken(user.token);
+    }
+  }
 
   // Fetch robots from server
   Future<void> fetchRobots() async {
@@ -89,9 +103,9 @@ class RobotViewModel extends ChangeNotifier {
     }
   }
 
-  void clearSelectedRobot() {
+  void clearSelectedRobot({bool notify = true}) {
     _selectedRobot = null;
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 
   void clearSelectedRecord() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/auth_viewmodel.dart';
 import 'package:pda_handheld/viewmodels/order_viewmodel.dart';
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderViewModel(ApiService())),
         ChangeNotifierProvider(create: (_) => RobotViewModel(ApiService())),
         ChangeNotifierProvider(create: (_) => NotificationViewModel()),
+        ChangeNotifierProvider(create: (_) => BottomNavViewModel()),
       ],
       child: MaterialApp(
         title: 'PDA v1.0.0',

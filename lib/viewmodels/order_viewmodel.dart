@@ -7,8 +7,6 @@ class OrderViewModel extends ChangeNotifier {
   final ApiService _apiService;
   final StorageService _storageService = StorageService();
 
-  OrderViewModel(this._apiService);
-
   List<RequestOrder> _requestOrders = [];
   List<DemandOrder> _demandOrders = [];
   List<RunningOrder> _runningOrders = [];
@@ -22,6 +20,20 @@ class OrderViewModel extends ChangeNotifier {
   List<Task> get availableTasks => _availableTasks;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
+
+  OrderViewModel(this._apiService) {
+    init();
+  }
+
+  Future<void> init() async {
+    _apiService.setBaseUrl(
+      _storageService.getServerConfig()?.baseUrl ?? "http://10.0.2.2:8088",
+    );
+    final user = _storageService.getUser();
+    if (user != null) {
+      _apiService.setToken(user.token);
+    }
+  }
 
   // Load request orders from storage
   Future<void> loadRequestOrders(String account) async {
@@ -83,6 +95,7 @@ class OrderViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _apiService.setToken(_storageService.getUser()!.token);
       _availableTasks = await _apiService.getTasks();
       _isLoading = false;
       notifyListeners();

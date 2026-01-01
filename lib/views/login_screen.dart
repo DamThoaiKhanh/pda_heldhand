@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/auth_viewmodel.dart';
 import 'package:pda_handheld/views/server_setting_screen.dart';
-import 'package:pda_handheld/views/request_order_screen.dart';
+import 'package:pda_handheld/views/main_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -37,9 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
-    // MaterialPageRoute(builder: (_) => const RequestOrderScreen());
-    // return;
-
     if (_accountController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter account and password')),
@@ -61,22 +58,23 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordController.text,
     );
 
-    if (mounted) {
-      if (success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Login successful')));
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const RequestOrderScreen()),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authViewModel.errorMessage ?? 'Login failed'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Login successful")));
+
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authViewModel.errorMessage ?? "Login failed"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -109,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 72),
                 TextField(
                   controller: _accountController,
                   decoration: const InputDecoration(

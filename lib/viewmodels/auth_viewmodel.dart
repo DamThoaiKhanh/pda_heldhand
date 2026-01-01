@@ -44,7 +44,14 @@ class AuthViewModel extends ChangeNotifier {
       }
 
       final response = await _apiService.login(account, password);
-      _user = User.fromJson(response);
+      // _user = User.fromJson(response);
+      _user = User(
+        account: response["data"]['userName'] ?? '',
+        role: response["data"]['roleName'] ?? '',
+        token: response["data"]['token'] ?? '',
+      );
+
+      _apiService.setToken(_user!.token);
 
       await _storageService.saveUser(_user!);
 

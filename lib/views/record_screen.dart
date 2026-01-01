@@ -30,80 +30,6 @@ class _RecordScreenState extends State<RecordScreen> {
     await robotViewModel.fetchRecords();
   }
 
-  Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.inbox, 'label': 'Demand'},
-      {'icon': Icons.play_circle, 'label': 'Running'},
-      {'icon': Icons.smart_toy, 'label': 'Robot'},
-      {'icon': Icons.history, 'label': 'Record'},
-      {'icon': Icons.map, 'label': 'Map'},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(items.length, (index) {
-          return InkWell(
-            onTap: () => _navigateToScreen(index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: _selectedIndex == index
-                    ? Theme.of(context).primaryColor
-                    : Colors.transparent,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    items[index]['icon'] as IconData,
-                    color: _selectedIndex == index ? Colors.white : Colors.grey,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    items[index]['label'] as String,
-                    style: TextStyle(
-                      color: _selectedIndex == index
-                          ? Colors.white
-                          : Colors.grey,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  void _navigateToScreen(int index) {
-    late Widget screen;
-    switch (index) {
-      case 0:
-        screen = const DemandOrderScreen();
-        break;
-      case 1:
-        screen = const RunningOrderScreen();
-        break;
-      case 2:
-        screen = const RobotScreen();
-        break;
-      case 3:
-        return;
-      case 4:
-        screen = const MapScreen();
-        break;
-    }
-
-    if (screen != null) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => screen));
-    }
-  }
-
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'finish':
@@ -123,17 +49,7 @@ class _RecordScreenState extends State<RecordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Record'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const RequestOrderScreen()),
-            );
-          },
-        ),
-      ),
+      appBar: AppBar(title: const Text('Record')),
       body: Consumer<RobotViewModel>(
         builder: (context, robotViewModel, child) {
           if (robotViewModel.isLoading) {
@@ -256,12 +172,6 @@ class _RecordScreenState extends State<RecordScreen> {
             ),
           );
         },
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: _buildBottomNav(),
       ),
     );
   }

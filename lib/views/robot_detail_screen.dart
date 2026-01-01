@@ -13,10 +13,24 @@ class RobotDetailScreen extends StatefulWidget {
 }
 
 class _RobotDetailScreenState extends State<RobotDetailScreen> {
+  late RobotViewModel _robotViewModel;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => _loadRobotDetail());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _robotViewModel = context.read<RobotViewModel>();
+  }
+
+  @override
+  void dispose() {
+    _robotViewModel.clearSelectedRobot(notify: false);
+    super.dispose();
   }
 
   Future<void> _loadRobotDetail() async {
@@ -234,11 +248,5 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
         },
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    context.read<RobotViewModel>().clearSelectedRobot();
-    super.dispose();
   }
 }

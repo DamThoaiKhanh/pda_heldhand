@@ -3,13 +3,18 @@ import 'package:http/http.dart' as http;
 import 'package:pda_handheld/models/models.dart';
 
 class ApiService {
-  String? _baseUrl = "http://10.0.2.2:8088";
+  String? _baseUrl;
+  String? _token;
 
   void setBaseUrl(String baseUrl) {
     _baseUrl = baseUrl;
   }
 
   String get baseUrl => _baseUrl ?? '';
+
+  void setToken(String token) {
+    _token = token;
+  }
 
   // Authentication
   Future<Map<String, dynamic>> login(String account, String password) async {
@@ -31,7 +36,10 @@ class ApiService {
     print('Fetching tasks from $_baseUrl/api/v1/tasks');
     final response = await http.get(
       Uri.parse('$_baseUrl/api/v1/tasks'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -46,7 +54,10 @@ class ApiService {
   Future<void> sendRequestOrder(RequestOrder order) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/v1/tasks/demands'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
       body: jsonEncode({
         'taskId': order.taskId,
         'taskName': order.taskName,
@@ -55,6 +66,7 @@ class ApiService {
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
+      print(response.body);
       throw Exception('Failed to send request order');
     }
   }
@@ -63,7 +75,10 @@ class ApiService {
   Future<List<DemandOrder>> getDemandOrders() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/v1/tasks/demands'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -78,7 +93,10 @@ class ApiService {
   Future<void> confirmDemandOrder(String taskId) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/orders/demand/confirm'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
       body: jsonEncode({'taskId': taskId}),
     );
 
@@ -91,7 +109,10 @@ class ApiService {
   Future<void> deleteDemandOrder(String taskId) async {
     final response = await http.delete(
       Uri.parse('$_baseUrl/api/orders/demand/$taskId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
@@ -103,7 +124,10 @@ class ApiService {
   Future<List<RunningOrder>> getRunningOrders() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/v1/tasks/executings'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -118,7 +142,10 @@ class ApiService {
   Future<void> cancelRunningOrder(String taskId) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/orders/running/cancel'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
       body: jsonEncode({'taskId': taskId}),
     );
 
@@ -131,7 +158,10 @@ class ApiService {
   Future<List<Robot>> getRobots() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/v1/robots'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -146,7 +176,10 @@ class ApiService {
   Future<Robot> getRobotDetail(String ipAddress) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/robots/$ipAddress'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -160,7 +193,10 @@ class ApiService {
   Future<List<Record>> getRecords() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/records'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
@@ -175,7 +211,10 @@ class ApiService {
   Future<Record> getRecordDetail(String taskId) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/records/$taskId'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $_token',
+      },
     );
 
     if (response.statusCode == 200) {
