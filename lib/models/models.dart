@@ -114,6 +114,29 @@ class DemandOrder {
   }
 }
 
+// Queue Order Model
+class QueueOrder {
+  final String taskId;
+  final String taskName;
+  final DateTime createdAt;
+
+  QueueOrder({
+    required this.taskId,
+    required this.taskName,
+    required this.createdAt,
+  });
+
+  factory QueueOrder.fromJson(Map<String, dynamic> json) {
+    return QueueOrder(
+      taskId: json['taskId'] ?? '',
+      taskName: json['taskName'] ?? '',
+      createdAt: json['createOn'] != null
+          ? DateTime.parse(json['createOn']).toLocal()
+          : DateTime.now(),
+    );
+  }
+}
+
 // Running Order Model
 class RunningOrder {
   final String taskId;

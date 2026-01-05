@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/utils/tab_config.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/robot_viewmodel.dart';
-import 'package:pda_handheld/models/models.dart';
 import 'package:pda_handheld/views/record_detail_screen.dart';
-import 'package:pda_handheld/views/request_order_screen.dart';
-import 'package:pda_handheld/views/demand_order_screen.dart';
-import 'package:pda_handheld/views/running_order_screen.dart';
-import 'package:pda_handheld/views/robot_screen.dart';
-import 'package:pda_handheld/views/map_screen.dart';
 
 class RecordScreen extends StatefulWidget {
   const RecordScreen({super.key});
@@ -17,12 +13,36 @@ class RecordScreen extends StatefulWidget {
 }
 
 class _RecordScreenState extends State<RecordScreen> {
-  int _selectedIndex = 4;
+  late BottomNavViewModel _bottomNavViewModel;
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() => _loadRecords());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<BottomNavViewModel>().addListener(_onTabChanged);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _bottomNavViewModel = context.read<BottomNavViewModel>();
+  }
+
+  @override
+  void dispose() {
+    _bottomNavViewModel.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
+  void _onTabChanged() {
+    final navVM = context.read<BottomNavViewModel>();
+
+    if (navVM.index == Tabs.record && navVM.previousIndex != Tabs.record) {
+      _loadRecords();
+    }
   }
 
   Future<void> _loadRecords() async {

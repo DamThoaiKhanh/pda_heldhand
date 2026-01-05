@@ -35,7 +35,7 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
 
   Future<void> _loadRobotDetail() async {
     final robotViewModel = context.read<RobotViewModel>();
-    await robotViewModel.fetchRobotDetail(widget.robot.ipAddress);
+    await robotViewModel.fetchRobotDetail(widget.robot.id ?? '');
   }
 
   Widget _buildDetailRow(String label, String? value) {

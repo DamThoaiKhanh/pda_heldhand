@@ -53,13 +53,13 @@ class RobotViewModel extends ChangeNotifier {
   }
 
   // Fetch robot detail
-  Future<void> fetchRobotDetail(String ipAddress) async {
+  Future<void> fetchRobotDetail(String id) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _selectedRobot = await _apiService.getRobotDetail(ipAddress);
+      _selectedRobot = await _apiService.getRobotDetail(id);
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -108,8 +108,8 @@ class RobotViewModel extends ChangeNotifier {
     if (notify) notifyListeners();
   }
 
-  void clearSelectedRecord() {
+  void clearSelectedRecord({bool notify = true}) {
     _selectedRecord = null;
-    notifyListeners();
+    if (notify) notifyListeners();
   }
 }

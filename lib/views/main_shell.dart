@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../utils/tab_config.dart';
 import '../viewmodels/bottom_nav_viewmodel.dart';
 

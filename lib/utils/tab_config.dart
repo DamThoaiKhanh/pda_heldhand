@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 // ✅ Import your tab screens
 import '../views/request_order_screen.dart';
 import '../views/demand_order_screen.dart';
+import '../views/queue_order_screen.dart';
 import '../views/running_order_screen.dart';
 import '../views/robot_screen.dart';
 import '../views/record_screen.dart';
@@ -36,19 +37,24 @@ class Tabs {
       page: DemandOrderScreen(),
     ),
     TabConfig(
+      label: "Queue",
+      icon: Icons.line_style_rounded,
+      page: QueueOrderScreen(),
+    ),
+    TabConfig(
       label: "Running",
       icon: Icons.article_outlined,
       page: RunningOrderScreen(),
     ),
     TabConfig(
-      label: "Robot",
-      icon: Icons.smart_toy_outlined,
-      page: RobotScreen(),
-    ),
-    TabConfig(
       label: "Record",
       icon: Icons.receipt_long_outlined,
       page: RecordScreen(),
+    ),
+    TabConfig(
+      label: "Robot",
+      icon: Icons.smart_toy_outlined,
+      page: RobotScreen(),
     ),
     TabConfig(
       label: "Map",
@@ -70,10 +76,11 @@ class Tabs {
   // ✅ Named indexes (safe to use everywhere)
   static int get order => 0;
   static int get demand => 1;
-  static int get running => 2;
-  static int get robot => 3;
+  static int get queue => 2;
+  static int get running => 3;
   static int get record => 4;
-  static int get map => 5;
-  static int get profile => 6;
-  static int get settings => 7;
+  static int get robot => 5;
+  static int get map => 6;
+  static int get profile => 7;
+  static int get settings => 8;
 }

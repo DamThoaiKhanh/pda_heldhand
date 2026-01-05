@@ -7,22 +7,20 @@ import 'package:pda_handheld/viewmodels/order_viewmodel.dart';
 import 'package:pda_handheld/models/models.dart';
 import 'package:intl/intl.dart';
 
-class DemandOrderScreen extends StatefulWidget {
-  const DemandOrderScreen({super.key});
+class QueueOrderScreen extends StatefulWidget {
+  const QueueOrderScreen({super.key});
 
   @override
-  State<DemandOrderScreen> createState() => _DemandOrderScreenState();
+  State<QueueOrderScreen> createState() => _QueueOrderScreenState();
 }
 
-class _DemandOrderScreenState extends State<DemandOrderScreen> {
+class _QueueOrderScreenState extends State<QueueOrderScreen> {
   late BottomNavViewModel _bottomNavViewModel;
-  String? _selectedOrderId;
 
   @override
   void initState() {
     super.initState();
-
-    Future.microtask(() => _loadDemandOrders());
+    Future.microtask(() => _loadQueueOrders());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<BottomNavViewModel>().addListener(_onTabChanged);
@@ -45,15 +43,15 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
     final navVM = context.read<BottomNavViewModel>();
 
     if (navVM.index == Tabs.demand && navVM.previousIndex != Tabs.demand) {
-      _loadDemandOrders();
+      _loadQueueOrders();
     }
   }
 
-  Future<void> _loadDemandOrders() async {
-    await context.read<OrderViewModel>().fetchDemandOrders();
+  Future<void> _loadQueueOrders() async {
+    await context.read<OrderViewModel>().fetchQueueOrders();
   }
 
-  void _showMenu(DemandOrder order) {
+  void _showMenu(QueueOrder order) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -79,28 +77,6 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
     );
   }
 
-  Future<void> _confirmOrder(String taskId) async {
-    final orderViewModel = context.read<OrderViewModel>();
-    final success = await orderViewModel.confirmDemandOrder(taskId);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success ? 'Order confirmed' : 'Failed to confirm order',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
-      );
-
-      if (success) {
-        setState(() {
-          _selectedOrderId = null;
-        });
-      }
-    }
-  }
-
   Future<void> _deleteOrder(String taskId) async {
     final orderViewModel = context.read<OrderViewModel>();
     final success = await orderViewModel.deleteDemandOrder(taskId);
@@ -124,7 +100,7 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Demand Order'),
+        title: const Text('Queue Order'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -153,28 +129,21 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (orderViewModel.demandOrders.isEmpty) {
-            return const Center(child: Text('No demand orders available'));
+          if (orderViewModel.queueOrders.isEmpty) {
+            return const Center(child: Text('No queue orders available'));
           }
 
           return RefreshIndicator(
-            onRefresh: _loadDemandOrders,
+            onRefresh: _loadQueueOrders,
             child: ListView.builder(
               padding: const EdgeInsets.all(8),
-              itemCount: orderViewModel.demandOrders.length,
+              itemCount: orderViewModel.queueOrders.length,
               itemBuilder: (context, index) {
-                final order = orderViewModel.demandOrders[index];
-                final isSelected = order.taskId == _selectedOrderId;
+                final order = orderViewModel.queueOrders[index];
 
                 return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _selectedOrderId = isSelected ? null : order.taskId;
-                    });
-                  },
                   onLongPress: () => _showMenu(order),
                   child: Card(
-                    color: isSelected ? Colors.blue.shade50 : null,
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -192,13 +161,6 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
                           Text(
                             'Create at: ${DateFormat('MM/dd/yyyy h:mm a').format(order.createdAt)}',
                           ),
-                          if (isSelected) ...[
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: () => _confirmOrder(order.taskId),
-                              child: const Text('Confirm'),
-                            ),
-                          ],
                         ],
                       ),
                     ),

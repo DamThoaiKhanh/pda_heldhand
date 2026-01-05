@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/robot_viewmodel.dart';
 import 'package:pda_handheld/models/models.dart';
-import 'package:pda_handheld/views/request_order_screen.dart';
-import 'package:pda_handheld/views/demand_order_screen.dart';
-import 'package:pda_handheld/views/running_order_screen.dart';
-import 'package:pda_handheld/views/robot_screen.dart';
-import 'package:pda_handheld/views/record_screen.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -16,8 +11,6 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  int _selectedIndex = 4;
-
   @override
   void initState() {
     super.initState();

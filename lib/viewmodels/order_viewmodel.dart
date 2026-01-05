@@ -8,6 +8,7 @@ class OrderViewModel extends ChangeNotifier {
   final StorageService _storageService = StorageService();
 
   List<RequestOrder> _requestOrders = [];
+  List<QueueOrder> _queueOrders = [];
   List<DemandOrder> _demandOrders = [];
   List<RunningOrder> _runningOrders = [];
   List<Task> _availableTasks = [];
@@ -15,6 +16,7 @@ class OrderViewModel extends ChangeNotifier {
   String? _errorMessage;
 
   List<RequestOrder> get requestOrders => _requestOrders;
+  List<QueueOrder> get queueOrders => _queueOrders;
   List<DemandOrder> get demandOrders => _demandOrders;
   List<RunningOrder> get runningOrders => _runningOrders;
   List<Task> get availableTasks => _availableTasks;
@@ -151,7 +153,7 @@ class OrderViewModel extends ChangeNotifier {
 
     try {
       await _apiService.deleteDemandOrder(taskId);
-      _demandOrders.removeWhere((o) => o.taskId == taskId);
+      _demandOrders.removeWhere((order) => order.taskId == taskId);
       _isLoading = false;
       notifyListeners();
       return true;
@@ -160,6 +162,23 @@ class OrderViewModel extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  // Get queue orders from server
+  Future<void> fetchQueueOrders() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _queueOrders = await _apiService.getQueueOrders();
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
