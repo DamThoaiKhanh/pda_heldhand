@@ -36,8 +36,8 @@ class _MapScreenState extends State<MapScreen> {
                 child: CustomPaint(painter: GridPainter(), child: Container()),
               ),
               // Robot positions overlay
-              if (robotViewModel.robots.isNotEmpty)
-                ...robotViewModel.robots.asMap().entries.map((entry) {
+              if (robotViewModel.robotSettingList.isNotEmpty)
+                ...robotViewModel.robotSettingList.asMap().entries.map((entry) {
                   final index = entry.key;
                   final robot = entry.value;
 
@@ -118,13 +118,12 @@ class _MapScreenState extends State<MapScreen> {
 }
 
 class _RobotMarker extends StatelessWidget {
-  final Robot robot;
+  final RobotInfo robot;
 
   const _RobotMarker({required this.robot});
 
   Color _getRobotColor() {
-    if (!robot.online) return Colors.grey;
-    if (robot.currentTask != null) return Colors.orange;
+    if (!robot.connected) return Colors.grey;
     return Colors.green;
   }
 
@@ -141,10 +140,10 @@ class _RobotMarker extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('IP: ${robot.ipAddress}'),
-                Text('Status: ${robot.status}'),
-                Text('Battery: ${robot.battery}%'),
-                if (robot.currentTask != null)
-                  Text('Task: ${robot.currentTask}'),
+                Text('Name: ${robot.name}'),
+                // Text('Battery: ${robot.battery}%'),
+                // if (robot.currentTask != null)
+                //   Text('Task: ${robot.currentTask}'),
               ],
             ),
             actions: [

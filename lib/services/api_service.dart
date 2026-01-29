@@ -214,8 +214,8 @@ class ApiService {
     }
   }
 
-  // Get Robots
-  Future<List<Robot>> getRobots() async {
+  // Get Robots Information
+  Future<List<RobotInfo>> getRobots() async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/v1/robots'),
       headers: {
@@ -226,14 +226,14 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body)["data"];
-      return data.map((json) => Robot.fromJson(json)).toList();
+      return data.map((json) => RobotInfo.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load robots');
     }
   }
 
   // Get Robot Detail
-  Future<Robot> getRobotDetail(String id) async {
+  Future<RobotStatus> getRobotDetail(String id) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/api/v1/robots/$id/status'),
       headers: {
@@ -256,7 +256,9 @@ class ApiService {
           '';
       final battery = robotStatus["dataStatus"]["batLevel"];
       final confidence = robotStatus["dataStatus"]["confidence"];
-      return Robot(
+      final chargingMode =
+          ChargingMode.values[robotStatus["dataStatus"]["chargingMode"] ?? 0];
+      return RobotStatus(
         id: id,
         ipAddress: ip,
         name: name,
@@ -266,6 +268,7 @@ class ApiService {
         online: connected,
         battery: battery,
         confidence: confidence,
+        chargingMode: chargingMode,
       );
     } else {
       throw Exception('Failed to load robot detail');

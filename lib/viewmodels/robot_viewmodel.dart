@@ -7,15 +7,17 @@ class RobotViewModel extends ChangeNotifier {
   final ApiService _apiService;
   final StorageService _storageService = StorageService();
 
-  List<Robot> _robots = [];
-  Robot? _selectedRobot;
+  List<RobotInfo> _robotSettingList = [];
+  RobotInfo? _selectedRobot;
+  RobotStatus? _selectedRobotStatus;
   List<Record> _records = [];
   Record? _selectedRecord;
   bool _isLoading = false;
   String? _errorMessage;
 
-  List<Robot> get robots => _robots;
-  Robot? get selectedRobot => _selectedRobot;
+  List<RobotInfo> get robotSettingList => _robotSettingList;
+  RobotInfo? get selectedRobot => _selectedRobot;
+  RobotStatus? get selectedRobotStatus => _selectedRobotStatus;
   List<Record> get records => _records;
   Record? get selectedRecord => _selectedRecord;
   bool get isLoading => _isLoading;
@@ -42,7 +44,7 @@ class RobotViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _robots = await _apiService.getRobots();
+      _robotSettingList = await _apiService.getRobots();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -59,7 +61,7 @@ class RobotViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _selectedRobot = await _apiService.getRobotDetail(id);
+      _selectedRobotStatus = await _apiService.getRobotDetail(id);
       _isLoading = false;
       notifyListeners();
     } catch (e) {

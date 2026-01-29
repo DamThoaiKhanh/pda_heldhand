@@ -1,3 +1,6 @@
+// Charging Mode
+enum ChargingMode { free, auto, manual }
+
 // User Model
 class User {
   final String account;
@@ -152,8 +155,90 @@ class RunningOrder {
   }
 }
 
+// Robot Info Model
+class RobotInfo {
+  final String id;
+  final String name;
+  final String group;
+  final String model;
+  final String ipAddress;
+  final String mac;
+  final bool connected;
+
+  const RobotInfo({
+    required this.id,
+    required this.name,
+    required this.group,
+    required this.model,
+    required this.ipAddress,
+    required this.mac,
+    required this.connected,
+  });
+
+  factory RobotInfo.fromJson(Map<String, dynamic> json) {
+    return RobotInfo(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      group: json['group'] as String? ?? '',
+      model: json['model'] as String? ?? '',
+      ipAddress: json['ipAddress'] as String? ?? '',
+      mac: json['mac'] as String? ?? '',
+      connected: json['connected'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'group': group,
+      'model': model,
+      'ipAddress': ipAddress,
+      'mac': mac,
+      'connected': connected,
+    };
+  }
+
+  RobotInfo copyWith({
+    String? id,
+    String? name,
+    String? group,
+    String? model,
+    String? ipAddress,
+    String? mac,
+    bool? connected,
+  }) {
+    return RobotInfo(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      group: group ?? this.group,
+      model: model ?? this.model,
+      ipAddress: ipAddress ?? this.ipAddress,
+      mac: mac ?? this.mac,
+      connected: connected ?? this.connected,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'RobotInfo(id: $id, name: $name, group: $group, model: $model, '
+        'ipAddress: $ipAddress, mac: $mac, connected: $connected)';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is RobotInfo &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          ipAddress == other.ipAddress; // uniqueness per spec
+
+  @override
+  int get hashCode => id.hashCode ^ ipAddress.hashCode;
+}
+
 // Robot Model
-class Robot {
+class RobotStatus {
   final String ipAddress;
   final String name;
   final String? currentTask;
@@ -163,9 +248,9 @@ class Robot {
   final int battery;
   final String? id;
   final double? confidence;
-  final bool? charging;
+  final ChargingMode chargingMode;
 
-  Robot({
+  RobotStatus({
     required this.ipAddress,
     required this.name,
     this.currentTask,
@@ -175,11 +260,11 @@ class Robot {
     required this.battery,
     this.id,
     this.confidence,
-    this.charging,
+    required this.chargingMode,
   });
 
-  factory Robot.fromJson(Map<String, dynamic> json) {
-    return Robot(
+  factory RobotStatus.fromJson(Map<String, dynamic> json) {
+    return RobotStatus(
       ipAddress: json['ipAddress'] ?? '',
       name: json['name'] ?? '',
       currentTask: json['currentTask'],
@@ -189,7 +274,7 @@ class Robot {
       battery: json['battery'] ?? 0,
       id: json['id'],
       confidence: json['confidence']?.toDouble(),
-      charging: json['charging'],
+      chargingMode: ChargingMode.values[json['chargingMode'] ?? 0],
     );
   }
 }

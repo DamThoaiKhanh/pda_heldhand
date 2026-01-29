@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/providers/websocket_provider.dart';
 import 'package:provider/provider.dart';
 import '../utils/tab_config.dart';
 import '../viewmodels/bottom_nav_viewmodel.dart';
@@ -24,6 +25,12 @@ class _MainShellState extends State<MainShell> {
 
     _scrollController.addListener(_updateArrows);
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateArrows());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<WebsocketProvider>().initRealtime(
+        wsUrl: "ws://10.0.2.2:8089",
+      );
+    });
   }
 
   void _updateArrows() {
