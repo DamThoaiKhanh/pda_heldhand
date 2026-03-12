@@ -254,6 +254,13 @@ class ApiService {
       final currentTaskId =
           robotStatus["dataStatus"]["taskStatus"]["currentTask"]["taskId"] ??
           '';
+      final taskState =
+          TaskRunningState
+              .values[((robotStatus["dataStatus"]["taskStatus"]["currentTask"]["state"]
+                          as num?)
+                      ?.toInt() ??
+                  0)
+              .clamp(0, TaskRunningState.values.length - 1)];
       final battery = robotStatus["dataStatus"]["batLevel"];
       final confidence = robotStatus["dataStatus"]["confidence"];
       final chargingMode =
@@ -261,15 +268,16 @@ class ApiService {
       return RobotStatus(
         id: id,
         ipAddress: ip,
-        name: name,
         currentTask: currentTask,
         currentTaskId: currentTaskId,
+        taskState: taskState,
         status: "None",
         online: connected,
         battery: battery,
         confidence: confidence,
         chargingMode: chargingMode,
       );
+      // return RobotStatus.fromJson(robotStatus);
     } else {
       throw Exception('Failed to load robot detail');
     }

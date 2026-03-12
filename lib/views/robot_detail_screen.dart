@@ -1,5 +1,5 @@
 import 'dart:async';
-
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:pda_handheld/providers/websocket_provider.dart';
 import 'package:provider/provider.dart';
@@ -25,9 +25,11 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
     super.initState();
     Future.microtask(() => _loadRobotDetail());
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startDebugSend();
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   _startDebugSend();
+    // });
+
+    _startDebugSend();
   }
 
   @override
@@ -50,14 +52,14 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
     _debugTimer?.cancel();
 
     _debugTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      // ✅ Debug send command every 1 second
-      robotProvider.sendCommand(
-        1006, // <-- replace with your real command code
-        data: {"robotId": widget.robotInfo.id},
-      );
+      robotProvider.sendCommand(1006, data: {"robotId": widget.robotInfo.id});
 
-      debugPrint("Sent WS command 1004 for robot ${widget.robotInfo.id}");
+      // debugPrint("Sent WS command 1004 for robot ${widget.robotInfo.id}");
     });
+  }
+
+  double radToDeg(double radians) {
+    return radians * 180 / math.pi;
   }
 
   Widget _buildWsDebugCard(WebsocketProvider robotProvider) {
@@ -138,8 +140,8 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
   }
 
   Color _getBatteryColor(int battery) {
-    if (battery > 60) return Colors.green;
-    if (battery > 30) return Colors.orange;
+    if (battery > 30) return Colors.green;
+    if (battery > 20) return Colors.orange;
     return Colors.red;
   }
 
@@ -152,14 +154,19 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
       body: Consumer<RobotViewModel>(
         builder: (context, robotViewModel, child) {
           final robotStatus =
-              robotViewModel.selectedRobotStatus ??
+              // robotViewModel.selectedRobotStatus ??
+              robotProvider.getRobotStatus(widget.robotInfo.id) ??
               RobotStatus(
                 ipAddress: "",
-                name: "",
+                id: "zz",
                 status: "",
                 online: false,
                 battery: 0,
                 chargingMode: ChargingMode.free,
+                taskState: TaskRunningState.stopped,
+                x: 0,
+                y: 0,
+                theta: 0,
               );
           final robotInfo = widget.robotInfo;
           if (robotViewModel.isLoading) {
@@ -178,7 +185,7 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
                     child: Column(
                       children: [
                         Icon(
-                          Icons.smart_toy,
+                          Icons.garage_rounded,
                           size: 80,
                           color: robotInfo.connected
                               ? Colors.blue
@@ -227,6 +234,43 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
                           _buildDetailRow('Group', robotInfo.group),
                           _buildDetailRow('IP Address', robotInfo.ipAddress),
                           _buildDetailRow('MAC', robotInfo.mac),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Localization',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Divider(),
+                          ...[
+                            _buildDetailRow(
+                              'Position X',
+                              robotStatus.x!.toStringAsFixed(3) + " m",
+                            ),
+                            _buildDetailRow(
+                              'Position Y',
+                              robotStatus.y!.toStringAsFixed(3) + " m",
+                            ),
+                            _buildDetailRow(
+                              'Orientation',
+                              "${(radToDeg(robotStatus.theta ?? 0)).toStringAsFixed(1)} deg",
+                            ),
+                            _buildDetailRow(
+                              'Confidence',
+                              "${((robotStatus.confidence ?? 0) * 100).toStringAsFixed(1)} %",
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -296,6 +340,18 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
                             ),
                           ),
                           _buildDetailRow(
+                            'Voltage',
+                            robotStatus.voltage != null
+                                ? '${robotStatus.voltage!.toStringAsFixed(2)} V'
+                                : 'N/A',
+                          ),
+                          _buildDetailRow(
+                            'Current',
+                            robotStatus.current != null
+                                ? '${robotStatus.current!.toStringAsFixed(2)} A'
+                                : 'N/A',
+                          ),
+                          _buildDetailRow(
                             'Charging',
                             robotStatus.chargingMode.name.toUpperCase(),
                           ),
@@ -311,7 +367,7 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Additional Info',
+                            'Task Status',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -320,16 +376,16 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
                           const Divider(),
                           ...[
                             _buildDetailRow(
-                              'Confidence',
-                              robotStatus.confidence?.toStringAsFixed(2),
-                            ),
-                            _buildDetailRow(
                               'Task ID',
                               robotStatus.currentTaskId,
                             ),
                             _buildDetailRow(
                               'Task Name',
                               robotStatus.currentTask,
+                            ),
+                            _buildDetailRow(
+                              'Task State',
+                              robotStatus.taskState.name.toUpperCase(),
                             ),
                           ],
                         ],

@@ -81,7 +81,7 @@ class _RobotScreenState extends State<RobotScreen> {
                           Row(
                             children: [
                               Icon(
-                                Icons.smart_toy,
+                                Icons.garage_rounded,
                                 size: 40,
                                 color: robot.connected
                                     ? Colors.blue

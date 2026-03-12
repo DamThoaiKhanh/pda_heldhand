@@ -1,6 +1,8 @@
 // Charging Mode
 enum ChargingMode { free, auto, manual }
 
+enum TaskRunningState { stopped, running, paused, continuing, ending }
+
 // User Model
 class User {
   final String account;
@@ -239,42 +241,67 @@ class RobotInfo {
 
 // Robot Model
 class RobotStatus {
+  final String id;
   final String ipAddress;
-  final String name;
+  final double? x;
+  final double? y;
+  final double? theta;
+  final double? confidence;
+  final String status;
+  final int battery;
+  final double? voltage;
+  final double? current;
+  final ChargingMode chargingMode;
   final String? currentTask;
   final String? currentTaskId;
-  final String status;
+  final TaskRunningState taskState;
   final bool online;
-  final int battery;
-  final String? id;
-  final double? confidence;
-  final ChargingMode chargingMode;
 
   RobotStatus({
     required this.ipAddress,
-    required this.name,
+    required this.id,
+    this.x,
+    this.y,
+    this.theta,
+    this.confidence,
+    required this.battery,
+    this.voltage,
+    this.current,
+    required this.chargingMode,
     this.currentTask,
     this.currentTaskId,
+    required this.taskState,
     required this.status,
     required this.online,
-    required this.battery,
-    this.id,
-    this.confidence,
-    required this.chargingMode,
   });
 
   factory RobotStatus.fromJson(Map<String, dynamic> json) {
+    final dataStatus = json['dataStatus'] as Map<String, dynamic>? ?? {};
+    final taskStatus = dataStatus['taskStatus'] as Map<String, dynamic>? ?? {};
+    final currentTask =
+        taskStatus['currentTask'] as Map<String, dynamic>? ?? {};
+
     return RobotStatus(
-      ipAddress: json['ipAddress'] ?? '',
-      name: json['name'] ?? '',
-      currentTask: json['currentTask'],
-      currentTaskId: json['currentTaskId'],
-      status: json['status'] ?? '',
-      online: json['connected'] ?? false,
-      battery: json['battery'] ?? 0,
-      id: json['id'],
-      confidence: json['confidence']?.toDouble(),
-      chargingMode: ChargingMode.values[json['chargingMode'] ?? 0],
+      ipAddress: json['ipAddress'] as String? ?? '',
+      id: json['id'] as String? ?? '',
+      x: (dataStatus['x'] as num?)?.toDouble() ?? 0.0,
+      y: (dataStatus['y'] as num?)?.toDouble() ?? 0.0,
+      theta: (dataStatus['angle'] as num?)?.toDouble() ?? 0.0,
+      confidence: (dataStatus['confidence'] as num?)?.toDouble(),
+      battery: (dataStatus['batLevel'] as num?)?.toInt() ?? 0,
+      voltage: (dataStatus['voltage'] as num?)?.toDouble(),
+      current: (dataStatus['current'] as num?)?.toDouble(),
+      currentTask: currentTask['taskName'] as String? ?? '',
+      currentTaskId: currentTask['taskId'] as String? ?? '',
+      taskState:
+          TaskRunningState.values[((taskStatus["state"] as num?)?.toInt() ?? 0)
+              .clamp(0, TaskRunningState.values.length - 1)],
+      status: (dataStatus['runningState'] ?? '').toString(),
+      online: true,
+      chargingMode:
+          ChargingMode.values[((dataStatus['chargingMode'] as num?)?.toInt() ??
+                  0)
+              .clamp(0, ChargingMode.values.length - 1)],
     );
   }
 }
