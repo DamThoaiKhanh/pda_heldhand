@@ -93,14 +93,14 @@ class _QueueOrderScreenState extends State<QueueOrderScreen> {
 
   void openSettingsTab(BuildContext context) {
     Navigator.popUntil(context, (route) => route.isFirst);
-    context.read<BottomNavViewModel>().setIndex(7);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Queue Order'),
+        title: const Text('Queue Orders'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -142,7 +142,7 @@ class _QueueOrderScreenState extends State<QueueOrderScreen> {
                 final order = orderViewModel.queueOrders[index];
 
                 return GestureDetector(
-                  onLongPress: () => _showMenu(order),
+                  onTap: () => _showMenu(order),
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),

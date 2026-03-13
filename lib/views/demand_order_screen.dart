@@ -117,14 +117,14 @@ class _DemandOrderScreenState extends State<DemandOrderScreen> {
 
   void openSettingsTab(BuildContext context) {
     Navigator.popUntil(context, (route) => route.isFirst);
-    context.read<BottomNavViewModel>().setIndex(7);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Demand Order'),
+        title: const Text('Demand Orders'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),

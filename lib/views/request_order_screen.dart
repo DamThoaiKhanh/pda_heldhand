@@ -14,6 +14,7 @@ import 'package:pda_handheld/views/profile_screen.dart';
 import 'package:pda_handheld/views/notification_screen.dart';
 import 'package:pda_handheld/views/settings_screen.dart';
 import 'package:intl/intl.dart';
+import '../utils/tab_config.dart';
 
 class RequestOrderScreen extends StatefulWidget {
   const RequestOrderScreen({super.key});
@@ -121,14 +122,14 @@ class _RequestOrderScreenState extends State<RequestOrderScreen> {
 
   void openSettingsTab(BuildContext context) {
     Navigator.popUntil(context, (route) => route.isFirst);
-    context.read<BottomNavViewModel>().setIndex(7);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request Order'),
+        title: const Text('Request Orders'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications),

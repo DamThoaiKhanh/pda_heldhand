@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/utils/tab_config.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/auth_viewmodel.dart';
 import 'package:pda_handheld/views/login_screen.dart';
@@ -50,6 +52,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +70,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const NotificationScreen()),
               );
+            },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
+            onSelected: (value) {
+              if (value == 'settings') {
+                openSettingsTab(context);
+              }
             },
           ),
         ],

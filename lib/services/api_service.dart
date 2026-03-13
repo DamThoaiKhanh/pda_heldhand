@@ -246,8 +246,13 @@ class ApiService {
       final robotStatus = jsonDecode(response.body)["data"]["robotStatus"];
       final id = robotStatus["id"] ?? '';
       final ip = robotStatus["ipAddress"] ?? '';
-      final name = robotStatus["name"] ?? '';
+      final mode =
+          RobotMode.values[((robotStatus["dataStatus"]["mode"] as num?)
+                      ?.toInt() ??
+                  0)
+              .clamp(0, RobotMode.values.length - 1)];
       final connected = robotStatus["connected"] ?? false;
+      final emergency = robotStatus["dataStatus"]["emergency"] ?? false;
       final currentTask =
           robotStatus["dataStatus"]["taskStatus"]["currentTask"]["taskName"] ??
           '';
@@ -268,6 +273,7 @@ class ApiService {
       return RobotStatus(
         id: id,
         ipAddress: ip,
+        mode: mode,
         currentTask: currentTask,
         currentTaskId: currentTaskId,
         taskState: taskState,
@@ -276,6 +282,7 @@ class ApiService {
         battery: battery,
         confidence: confidence,
         chargingMode: chargingMode,
+        emergency: emergency,
       );
       // return RobotStatus.fromJson(robotStatus);
     } else {

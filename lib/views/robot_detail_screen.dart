@@ -114,8 +114,17 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
   }
 
   Future<void> _loadRobotDetail() async {
-    final robotViewModel = context.read<RobotViewModel>();
-    await robotViewModel.fetchRobotDetail(widget.robotInfo.id);
+    // final robotViewModel = context.read<RobotViewModel>();
+    // await robotViewModel.fetchRobotDetail(widget.robotInfo.id);
+
+    final robotProvider = context.read<WebsocketProvider>();
+    robotProvider.sendCommand(1006, data: {"robotId": widget.robotInfo.id});
+
+    // Update robot connection status based on initial data (since WebSocket updates may not come immediately)
+    robotProvider.setRobotConnection(
+      widget.robotInfo.id,
+      widget.robotInfo.connected,
+    );
   }
 
   Widget _buildDetailRow(String label, String? value) {
@@ -154,21 +163,12 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
       body: Consumer<RobotViewModel>(
         builder: (context, robotViewModel, child) {
           final robotStatus =
-              // robotViewModel.selectedRobotStatus ??
               robotProvider.getRobotStatus(widget.robotInfo.id) ??
-              RobotStatus(
-                ipAddress: "",
-                id: "zz",
-                status: "",
-                online: false,
-                battery: 0,
-                chargingMode: ChargingMode.free,
-                taskState: TaskRunningState.stopped,
-                x: 0,
-                y: 0,
-                theta: 0,
-              );
+              RobotStatus.makeOffline();
           final robotInfo = widget.robotInfo;
+          final connectionStatus = robotProvider.getRobotConnection(
+            widget.robotInfo.id,
+          );
           if (robotViewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -182,39 +182,47 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child: Column(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.garage_rounded,
-                          size: 80,
-                          color: robotInfo.connected
-                              ? Colors.blue
-                              : Colors.grey,
+                        StatusHighlight(
+                          label: 'CONNECTION',
+                          icon: connectionStatus
+                              ? Icons.wifi
+                              : Icons.wifi_off_outlined,
+                          // icon: Icons.wifi,
+                          iconBgColor: Color(0xFF1F2A44),
+                          iconColor: connectionStatus
+                              ? Colors.white
+                              : Colors.redAccent,
                         ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: robotInfo.connected
-                                ? Colors.green
-                                : Colors.grey,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            robotInfo.connected ? 'CONNECTED' : 'DISCONNECTED',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        SizedBox(width: 16),
+                        StatusHighlight(
+                          label: 'AUTO MODE',
+                          // icon: Icons.hdr_auto,
+                          icon: robotStatus.mode == RobotMode.auto
+                              ? Icons.check_circle_outline_rounded
+                              : Icons.radio_button_unchecked,
+                          iconBgColor: Color(0xFF1F2A44),
+                          iconColor: robotStatus.mode == RobotMode.auto
+                              ? Colors.green
+                              : Colors.white,
+                        ),
+                        SizedBox(width: 16),
+                        StatusHighlight(
+                          label: 'EMERGENCY',
+                          icon: robotStatus.emergency
+                              ? Icons.lock
+                              : Icons.lock_open,
+                          iconBgColor: Color(0xFF1F2A44),
+                          iconColor: robotStatus.emergency
+                              ? Colors.red
+                              : Colors.white,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
@@ -400,6 +408,57 @@ class _RobotDetailScreenState extends State<RobotDetailScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class StatusHighlight extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color iconBgColor;
+  final Color iconColor;
+
+  const StatusHighlight({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.iconBgColor,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 90,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(child: Icon(icon, size: 38, color: iconColor)),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -8,7 +8,10 @@ import 'package:http/http.dart' as http;
 import 'package:pda_handheld/models/models.dart';
 import 'package:pda_handheld/providers/websocket_provider.dart';
 import 'package:pda_handheld/services/storage_service.dart';
+import 'package:pda_handheld/utils/tab_config.dart';
+import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
 import 'package:pda_handheld/viewmodels/robot_viewmodel.dart';
+import 'package:pda_handheld/views/notification_screen.dart';
 import 'package:provider/provider.dart';
 
 const double kRobotBodyWidth = 0.96;
@@ -199,10 +202,38 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map')),
+      appBar: AppBar(
+        title: const Text('Map'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationScreen()),
+              );
+            },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
+            onSelected: (value) {
+              if (value == 'settings') {
+                openSettingsTab(context);
+              }
+            },
+          ),
+        ],
+      ),
       body: Consumer2<RobotViewModel, WebsocketProvider>(
         builder: (context, robotViewModel, wsProvider, child) {
           return LayoutBuilder(

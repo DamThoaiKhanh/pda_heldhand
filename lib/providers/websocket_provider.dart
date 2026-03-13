@@ -5,6 +5,25 @@ import '../models/ws_event.dart';
 import '../models/models.dart';
 import '../services/websocket_service.dart';
 
+enum WsCommands {
+  getAutoResponseRobotStatus(1000),
+  robotConnectionChange(1002),
+  getRobotListStatus(1004),
+  getRobotStatusById(1006);
+
+  final int value;
+  const WsCommands(this.value);
+
+  static WsCommands? fromValue(int value) {
+    for (var command in WsCommands.values) {
+      if (command.value == value) {
+        return command;
+      }
+    }
+    return null;
+  }
+}
+
 class RobotPose {
   final String robotId;
   final double x;
@@ -40,16 +59,34 @@ class WebsocketProvider extends ChangeNotifier {
   WsConnectionState _connectionState = WsConnectionState.disconnected;
   WsConnectionState get connectionState => _connectionState;
 
+  // Websocket connection status
+  bool get isConnected => _connectionState == WsConnectionState.connected;
+
   final Map<String, dynamic> _robotData = {};
   Map<String, dynamic> get robotData => _robotData;
 
+  final Map<String, bool> _allRobotConnection = {};
+  Map<String, bool> get allRobotConnection => _allRobotConnection;
+  set allRobotConnection(Map<String, bool> value) {
+    _allRobotConnection
+      ..clear()
+      ..addAll(value);
+    notifyListeners();
+  }
+
+  bool getRobotConnection(String robotId) =>
+      _allRobotConnection[robotId] ?? false;
+  void setRobotConnection(String robotId, bool connected) {
+    _allRobotConnection[robotId] = connected;
+    // notifyListeners();
+  }
+
+  // All robot poses, keyed by robot ID
   final Map<String, RobotPose> _robotPoses = {};
   Map<String, RobotPose> get robotPoses => _robotPoses;
-
   RobotPose? getRobotPose(String robotId) => _robotPoses[robotId];
 
-  bool get isConnected => _connectionState == WsConnectionState.connected;
-
+  // All robot status, keyed by robot ID
   final Map<String, RobotStatus> _allRobotStatus = {};
   Map<String, RobotStatus> get allRobotStatus => _allRobotStatus;
   RobotStatus? getRobotStatus(String robotId) => _allRobotStatus[robotId];
@@ -69,6 +106,17 @@ class WebsocketProvider extends ChangeNotifier {
     await _ws.connect();
   }
 
+  @override
+  void dispose() {
+    _wsSub?.cancel();
+    _stateSub?.cancel();
+    super.dispose();
+  }
+
+  void sendCommand(int command, {Map<String, dynamic>? data}) {
+    _ws.sendCommand(command, data: data);
+  }
+
   void _handleEvent(WsEvent event) {
     if (!event.isOk) return;
 
@@ -78,22 +126,40 @@ class WebsocketProvider extends ChangeNotifier {
     debugPrint("Websocket received event: command=${event.command}");
     // debugPrint("Received event: command=${event.command}, data=${event.data}");
 
-    if (event.command == 1004) {
+    if (event.command == WsCommands.robotConnectionChange.value) {
+      _updateAllRobotConnections(event.command, event.data);
+      notifyListeners();
+      return;
+    } else if (event.command == WsCommands.getRobotListStatus.value) {
       _updateAllRobotPoses(event.command, event.data);
-    } else if (event.command == 1006) {
-      if (event.data is Map<String, dynamic>) {
-        final robotStatus = RobotStatus.fromJson(
-          event.data as Map<String, dynamic>,
-        );
-        _allRobotStatus[robotStatus.id] = robotStatus;
-      }
+      notifyListeners();
+      return;
+    } else if (event.command == WsCommands.getRobotStatusById.value) {
+      _updataRobotStatus(event.command, event.data);
+      notifyListeners();
+      return;
     }
+  }
 
-    notifyListeners();
+  void _updateAllRobotConnections(int command, dynamic data) {
+    if (command != WsCommands.robotConnectionChange.value) return;
+
+    if (data == null || data is! Map) return;
+
+    final robotConnectionChange = data['robotConnectionChange'];
+    if (robotConnectionChange is! Map) return;
+
+    final robotId = robotConnectionChange['id']?.toString() ?? '';
+    if (robotId.isEmpty) return;
+
+    final connected = robotConnectionChange['connected'] as bool? ?? false;
+    if (robotId.isNotEmpty) {
+      _allRobotConnection[robotId] = connected;
+    }
   }
 
   void _updateAllRobotPoses(int command, dynamic data) {
-    if (command != 1004) return;
+    if (command != WsCommands.getRobotListStatus.value) return;
 
     if (data == null || data is! Map) return;
 
@@ -106,33 +172,26 @@ class WebsocketProvider extends ChangeNotifier {
       final robotId = item['id']?.toString() ?? '';
       if (robotId.isEmpty) continue;
 
-      final dataStatus = item['dataStatus'];
-      if (dataStatus is! Map) continue;
+      if (item is Map<String, dynamic>) {
+        final statusData = RobotStatus.fromJson(item);
+        _allRobotStatus[robotId] = statusData;
 
-      final x = (dataStatus['x'] as num?)?.toDouble();
-      final y = (dataStatus['y'] as num?)?.toDouble();
-      final angle = (dataStatus['angle'] as num?)?.toDouble();
-
-      if (x == null || y == null) continue;
-
-      _robotPoses[robotId] = RobotPose(
-        robotId: robotId,
-        x: x,
-        y: y,
-        theta: angle,
-        online: true,
-      );
+        _robotPoses[robotId] = RobotPose(
+          robotId: robotId,
+          x: statusData.x?.toDouble() ?? 0.0,
+          y: statusData.y?.toDouble() ?? 0.0,
+          theta: statusData.theta,
+          online: true,
+        );
+      }
     }
   }
 
-  void sendCommand(int command, {Map<String, dynamic>? data}) {
-    _ws.sendCommand(command, data: data);
-  }
-
-  @override
-  void dispose() {
-    _wsSub?.cancel();
-    _stateSub?.cancel();
-    super.dispose();
+  void _updataRobotStatus(int command, dynamic data) {
+    if (command != WsCommands.getRobotStatusById.value) return;
+    if (data is Map<String, dynamic>) {
+      final robotStatus = RobotStatus.fromJson(data);
+      _allRobotStatus[robotStatus.id] = robotStatus;
+    }
   }
 }

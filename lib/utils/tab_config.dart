@@ -24,56 +24,64 @@ class TabConfig {
 }
 
 class Tabs {
-  // ✅ One list = single source of truth
   static const List<TabConfig> all = [
     TabConfig(
+      // 0
       label: "Order",
       icon: Icons.assignment_outlined,
       page: RequestOrderScreen(),
     ),
     TabConfig(
+      // 1
       label: "Demand",
       icon: Icons.layers_outlined,
       page: DemandOrderScreen(),
     ),
     TabConfig(
+      // 2
       label: "Queue",
       icon: Icons.line_style_rounded,
       page: QueueOrderScreen(),
     ),
     TabConfig(
+      // 3
       label: "Running",
       icon: Icons.article_outlined,
       page: RunningOrderScreen(),
     ),
     TabConfig(
+      // 4
       label: "Record",
       icon: Icons.receipt_long_outlined,
       page: RecordScreen(),
     ),
     TabConfig(
+      // 5
       label: "Robot",
       icon: Icons.smart_toy_outlined,
       page: RobotScreen(),
     ),
     TabConfig(
+      // 6
       label: "Map",
       icon: Icons.location_on_outlined,
       page: MapScreen(),
     ),
     TabConfig(
+      // 7
       label: "Profile",
       icon: Icons.person_outline,
       page: ProfileScreen(),
     ),
     TabConfig(
+      // 8
       label: "Settings",
       icon: Icons.settings_outlined,
       page: SettingsScreen(),
     ),
   ];
 
-  // ✅ Named indexes (safe to use everywhere)
+  // Indexe ò the screen
   static int get order => 0;
   static int get demand => 1;
   static int get queue => 2;

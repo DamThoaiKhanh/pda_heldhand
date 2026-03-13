@@ -3,16 +3,16 @@ import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/robot_viewmodel.dart';
 import 'package:pda_handheld/models/models.dart';
 
-class RecordDetailScreen extends StatefulWidget {
-  final Record record;
+class RunningDetailScreen extends StatefulWidget {
+  final RunningOrder runningOrder;
 
-  const RecordDetailScreen({super.key, required this.record});
+  const RunningDetailScreen({super.key, required this.runningOrder});
 
   @override
-  State<RecordDetailScreen> createState() => _RecordDetailScreenState();
+  State<RunningDetailScreen> createState() => _RunningDetailScreenState();
 }
 
-class _RecordDetailScreenState extends State<RecordDetailScreen> {
+class _RunningDetailScreenState extends State<RunningDetailScreen> {
   late RobotViewModel _robotViewModel;
 
   @override
@@ -29,13 +29,13 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
 
   @override
   void dispose() {
-    _robotViewModel.clearSelectedRecord(notify: false);
+    // _robotViewModel.clearSelectedRecord(notify: false);
     super.dispose();
   }
 
   Future<void> _loadRecordDetail() async {
-    final robotViewModel = context.read<RobotViewModel>();
-    await robotViewModel.fetchRecordDetail(widget.record.taskId);
+    // final robotViewModel = context.read<RobotViewModel>();
+    // await robotViewModel.fetchRecordDetail(widget.runningOrder.taskId);
   }
 
   Widget _buildDetailRow(String label, String? value) {
@@ -78,14 +78,14 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Record Detail')),
+      appBar: AppBar(title: const Text('Running Detail')),
       body: Consumer<RobotViewModel>(
         builder: (context, robotViewModel, child) {
-          final record = robotViewModel.selectedRecord ?? widget.record;
+          final runningOrder = widget.runningOrder;
 
-          if (robotViewModel.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          // if (robotViewModel.isLoading) {
+          //   return const Center(child: CircularProgressIndicator());
+          // }
 
           return RefreshIndicator(
             onRefresh: _loadRecordDetail,
@@ -101,7 +101,7 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
                         Icon(
                           Icons.history,
                           size: 80,
-                          color: _getStatusColor(record.status),
+                          color: _getStatusColor('success'),
                         ),
                         const SizedBox(height: 8),
                         Container(
@@ -110,11 +110,11 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(record.status),
+                            color: _getStatusColor('success'),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            record.status.toUpperCase(),
+                            'Running'.toUpperCase(),
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -139,40 +139,39 @@ class _RecordDetailScreenState extends State<RecordDetailScreen> {
                             ),
                           ),
                           const Divider(),
-                          _buildDetailRow('Task ID', record.taskId),
-                          _buildDetailRow('Task name', record.taskName),
-                          _buildDetailRow('Status', record.status),
-                          if (record.createdOn != null)
+                          _buildDetailRow('Task ID', runningOrder.taskId),
+                          _buildDetailRow('Task name', runningOrder.taskName),
+                          _buildDetailRow('Status', 'Running'),
+                          if (runningOrder.createdOn != null)
                             _buildDetailRow(
                               'Created on',
-                              '${record.createdOn!.day}/${record.createdOn!.month}/${record.createdOn!.year} ${record.createdOn!.hour}:${record.createdOn!.minute.toString().padLeft(2, '0')}',
+                              '${runningOrder.createdOn!.day}/${runningOrder.createdOn!.month}/${runningOrder.createdOn!.year} ${runningOrder.createdOn!.hour}:${runningOrder.createdOn!.minute.toString().padLeft(2, '0')}',
                             ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (record.robotName != null || record.robotIp != null)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Robot Information',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Robot Information',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            const Divider(),
-                            _buildDetailRow('Robot IP', record.robotIp),
-                            _buildDetailRow('Robot name', record.robotName),
-                          ],
-                        ),
+                          ),
+                          const Divider(),
+                          _buildDetailRow('Robot IP', runningOrder.robotIp),
+                          _buildDetailRow('Robot name', runningOrder.robotName),
+                        ],
                       ),
                     ),
+                  ),
                 ],
               ),
             ),

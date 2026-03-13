@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pda_handheld/utils/tab_config.dart';
 import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
+import 'package:pda_handheld/views/notification_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/robot_viewmodel.dart';
 import 'package:pda_handheld/views/record_detail_screen.dart';
@@ -66,10 +67,38 @@ class _RecordScreenState extends State<RecordScreen> {
     }
   }
 
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Record')),
+      appBar: AppBar(
+        title: const Text('Record Orders'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationScreen()),
+              );
+            },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
+            onSelected: (value) {
+              if (value == 'settings') {
+                openSettingsTab(context);
+              }
+            },
+          ),
+        ],
+      ),
       body: Consumer<RobotViewModel>(
         builder: (context, robotViewModel, child) {
           if (robotViewModel.isLoading) {

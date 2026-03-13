@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:pda_handheld/providers/websocket_provider.dart';
 import 'package:pda_handheld/utils/tab_config.dart';
 import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
+import 'package:pda_handheld/views/notification_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/robot_viewmodel.dart';
 import 'package:pda_handheld/views/robot_detail_screen.dart';
@@ -13,68 +15,137 @@ class RobotScreen extends StatefulWidget {
 }
 
 class _RobotScreenState extends State<RobotScreen> {
+  BottomNavViewModel? _bottomNavViewModel;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => _loadRobots());
+    Future.microtask(() => _loadRobotList());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BottomNavViewModel>().addListener(_onTabChanged);
+      if (!mounted) return;
+
+      _bottomNavViewModel = context.read<BottomNavViewModel>();
+      _bottomNavViewModel!.addListener(_onTabChanged);
     });
   }
 
+  @override
+  void dispose() {
+    _bottomNavViewModel?.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
   void _onTabChanged() {
-    final navVM = context.read<BottomNavViewModel>();
+    if (!mounted) return;
+    final navVM = _bottomNavViewModel;
+    if (navVM == null) return;
 
     if (navVM.index == Tabs.robot && navVM.previousIndex != Tabs.robot) {
-      _loadRobots();
+      _loadRobotList();
     }
   }
 
-  Future<void> _loadRobots() async {
+  Future<void> _loadRobotList() async {
     final robotViewModel = context.read<RobotViewModel>();
     await robotViewModel.fetchRobots();
+
+    robotViewModel.robotSettingList.forEach((robot) {
+      context.read<WebsocketProvider>().setRobotConnection(
+        robot.id,
+        robot.connected,
+      );
+    });
   }
 
   Color _getBatteryColor(int battery) {
-    if (battery > 60) return Colors.green;
-    if (battery > 30) return Colors.orange;
+    if (battery > 30) return Colors.green;
+    if (battery > 20) return Colors.orange;
     return Colors.red;
+  }
+
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Robot')),
-      body: Consumer<RobotViewModel>(
-        builder: (context, robotViewModel, child) {
+      appBar: AppBar(
+        title: const Text('Robots'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationScreen()),
+              );
+            },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
+            onSelected: (value) {
+              if (value == 'settings') {
+                openSettingsTab(context);
+              }
+            },
+          ),
+        ],
+      ),
+      body: Consumer2<RobotViewModel, WebsocketProvider>(
+        builder: (context, robotViewModel, websocketProvider, child) {
           if (robotViewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (robotViewModel.robotSettingList.isEmpty) {
-            return const Center(child: Text('No robots available'));
+            return RefreshIndicator(
+              onRefresh: _loadRobotList,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: SizedBox(
+                      height: constraints.maxHeight,
+                      child: const Center(child: Text('No robots available')),
+                    ),
+                  );
+                },
+              ),
+            );
           }
 
           return RefreshIndicator(
-            onRefresh: _loadRobots,
+            onRefresh: _loadRobotList,
             child: ListView.builder(
               padding: const EdgeInsets.all(10),
               itemCount: robotViewModel.robotSettingList.length,
               itemBuilder: (context, index) {
                 final robot = robotViewModel.robotSettingList[index];
+                final isConnected = websocketProvider.getRobotConnection(
+                  robot.id,
+                );
+
+                final battery =
+                    websocketProvider.getRobotStatus(robot.id)?.battery ?? 0;
 
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => RobotDetailScreen(robotInfo: robot),
                       ),
                     );
+
+                    await _loadRobotList();
                   },
                   child: Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(10),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -83,9 +154,7 @@ class _RobotScreenState extends State<RobotScreen> {
                               Icon(
                                 Icons.garage_rounded,
                                 size: 40,
-                                color: robot.connected
-                                    ? Colors.blue
-                                    : Colors.grey,
+                                color: isConnected ? Colors.blue : Colors.grey,
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -110,7 +179,7 @@ class _RobotScreenState extends State<RobotScreen> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: robot.connected
+                                            color: isConnected
                                                 ? Colors.green
                                                 : Colors.grey,
                                             borderRadius: BorderRadius.circular(
@@ -118,7 +187,7 @@ class _RobotScreenState extends State<RobotScreen> {
                                             ),
                                           ),
                                           child: Text(
-                                            robot.connected
+                                            isConnected
                                                 ? 'Connected'
                                                 : 'Disconnected',
                                             style: const TextStyle(
@@ -126,6 +195,23 @@ class _RobotScreenState extends State<RobotScreen> {
                                               fontSize: 12,
                                             ),
                                           ),
+                                        ),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.battery_std,
+                                              color: _getBatteryColor(battery),
+                                            ),
+                                            Text(
+                                              '${battery}%',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: _getBatteryColor(
+                                                  battery,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -156,21 +242,6 @@ class _RobotScreenState extends State<RobotScreen> {
                                   ],
                                 ),
                               ),
-                              // Column(
-                              //   children: [
-                              //     Icon(
-                              //       Icons.battery_std,
-                              //       color: _getBatteryColor(robot.battery),
-                              //     ),
-                              //     Text(
-                              //       '${robot.battery}%',
-                              //       style: TextStyle(
-                              //         fontWeight: FontWeight.bold,
-                              //         color: _getBatteryColor(robot.battery),
-                              //       ),
-                              //     ),
-                              //   ],
-                              // ),
                             ],
                           ),
                           // if (robot.currentTask != null) ...[

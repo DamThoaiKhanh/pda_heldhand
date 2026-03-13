@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pda_handheld/utils/tab_config.dart';
 import 'package:pda_handheld/viewmodels/bottom_nav_viewmodel.dart';
+import 'package:pda_handheld/views/notification_screen.dart';
+import 'package:pda_handheld/views/running_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:pda_handheld/viewmodels/order_viewmodel.dart';
 import 'package:pda_handheld/models/models.dart';
@@ -13,17 +15,30 @@ class RunningOrderScreen extends StatefulWidget {
 }
 
 class _RunningOrderScreenState extends State<RunningOrderScreen> {
+  BottomNavViewModel? _bottomNavViewModel;
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => _loadRunningOrders());
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<BottomNavViewModel>().addListener(_onTabChanged);
+      if (!mounted) return;
+
+      _bottomNavViewModel = context.read<BottomNavViewModel>();
+      _bottomNavViewModel!.addListener(_onTabChanged);
     });
   }
 
+  @override
+  void dispose() {
+    _bottomNavViewModel?.removeListener(_onTabChanged);
+    super.dispose();
+  }
+
   void _onTabChanged() {
-    final navVM = context.read<BottomNavViewModel>();
+    if (!mounted) return;
+    final navVM = _bottomNavViewModel;
+    if (navVM == null) return;
 
     if (navVM.index == Tabs.running && navVM.previousIndex != Tabs.running) {
       _loadRunningOrders();
@@ -31,11 +46,12 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
   }
 
   Future<void> _loadRunningOrders() async {
+    if (!mounted) return;
     final orderViewModel = context.read<OrderViewModel>();
     await orderViewModel.fetchRunningOrders();
   }
 
-  void _showCancelMenu(RunningOrder order) {
+  void _showModalBottomMenu(RunningOrder order) {
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -44,14 +60,29 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.cancel, color: Colors.orange),
+                leading: const Icon(Icons.list_rounded, color: Colors.orange),
                 title: const Text(
-                  'Hủy',
-                  style: TextStyle(color: Colors.orange),
+                  'Detail Order',
+                  // style: TextStyle(color: Colors.orange),
                 ),
                 onTap: () {
                   Navigator.pop(context);
-                  _cancelOrder(order.taskId);
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RunningDetailScreen(runningOrder: order),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cancel, color: Colors.red),
+                title: const Text(
+                  'Cancel Order',
+                  // style: TextStyle(color: Colors.orange),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _cancelOrderConfirm(order.taskId);
                 },
               ),
             ],
@@ -61,7 +92,7 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
     );
   }
 
-  Future<void> _cancelOrder(String taskId) async {
+  Future<void> _cancelOrderConfirm(String taskId) async {
     // Show confirmation dialog
     final confirm = await showDialog<bool>(
       context: context,
@@ -98,10 +129,39 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
     }
   }
 
+  void openSettingsTab(BuildContext context) {
+    Navigator.popUntil(context, (route) => route.isFirst);
+    context.read<BottomNavViewModel>().setIndex(Tabs.settings);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Running')),
+      appBar: AppBar(
+        title: const Text('Running Orders'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationScreen()),
+              );
+            },
+          ),
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'settings', child: Text('Settings')),
+            ],
+            onSelected: (value) {
+              if (value == 'settings') {
+                openSettingsTab(context);
+              }
+            },
+          ),
+        ],
+      ),
+
       body: Consumer<OrderViewModel>(
         builder: (context, orderViewModel, child) {
           if (orderViewModel.isLoading) {
@@ -121,7 +181,7 @@ class _RunningOrderScreenState extends State<RunningOrderScreen> {
                 final order = orderViewModel.runningOrders[index];
 
                 return GestureDetector(
-                  onLongPress: () => _showCancelMenu(order),
+                  onTap: () => _showModalBottomMenu(order),
                   child: Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
